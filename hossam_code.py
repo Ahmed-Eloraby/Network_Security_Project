@@ -1,28 +1,36 @@
+import tkinter as tk
 
- 
-def generate_random_128bits_ascii():  
-    import string  
-    import secrets  
+def create_input_window():
+    def submit_action():
+        user_input = entry.get()
+        # Do something with the user input
+        print(f"User input: {user_input}")
 
-    res = ''.join(secrets.choice(string.ascii_letters + string.digits + string.punctuation) for x in range(2))  
-    # Print the Secure string with the combonation of letters, digits and punctuation   
-    print("Secure random string is : "+ str(res)) 
-    return res
+    # Create the main application window
+    window = tk.Tk()
+    window.title("Input Window")
+    window.geometry("300x150")
 
+    # Configure window background color
+    window.configure(bg="#f0f0f0")
 
+    # Configure label style
+    label_style = {"font": ("Arial", 12), "bg": "#f0f0f0", "fg": "#333333"}
 
-# x="tester"
-# savekey(x)
-import os
-aes_key=os.urandom(16)
+    # Add a label
+    label = tk.Label(window, text="Enter your input:", **label_style)
+    label.pack(pady=10)
 
-print(aes_key)
+    # Add an entry field for input
+    entry = tk.Entry(window, font=("Arial", 12))
+    entry.pack(pady=5)
 
-# s = generate_random_128bits_ascii()
-# nchars = len(s)
-# print(sum(ord(s[byte])<<8*(nchars-byte-1) for byte in range(nchars)))
-# print((126<<8)+40)
-# while(True):
-#     x = input()
-#     print(ord(x))
+    # Add a submit button
+    button = tk.Button(window, text="Submit", command=submit_action, font=("Arial", 12))
+    button.pack(pady=10)
 
+    # Start the event loop
+    window.mainloop()
+
+# Create and run the input window
+create_input_window()
